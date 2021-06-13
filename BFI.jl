@@ -107,6 +107,7 @@ function eval2()
 	# Second version of eval
 	# Instead of using a bunch of elseifs, use dicts
 
+	
 	#switch = Dict("+" => (tape, tapepos) -> (tape[tapepos] += 1), )
 
 end
