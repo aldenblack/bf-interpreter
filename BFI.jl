@@ -25,7 +25,6 @@ function readfile(text::String)
 			push!(code, t)
 		end
 	end
-	#println(code)
 	return code
 end
 
@@ -51,13 +50,12 @@ function init_jumptable(code)
 	return jumptable
 end
 
-function eval(code, jt)
+function eval(code, jumptable)
 	tape::Array{UInt8} = [0]
 	tapepos::Int = 1
 	pc::Int = 1 # "Program Counter" (code position)
 
 	# Instruction Evaluation
-	#println(length(code))
 	while pc <= length(code)
 		instr = code[pc]
 		if instr == '>'
@@ -85,17 +83,15 @@ function eval(code, jt)
 			else
 				tape[tapepos] = read(stdin, UInt8)
 			end
-			#println("Read from stdin: " * Char(tape[tapepos]))
 		elseif instr == '.'
 			print(Char(tape[tapepos]))
-			#println("Write to stdout: " * Char(tape[tapepos]))
 		elseif instr == '['
 			if tape[tapepos] == 0
-				pc = jt[pc]
+				pc = jumptable[pc]
 			end
 		elseif instr == ']'
 			if tape[tapepos] != 0
-				pc = jt[pc]
+				pc = jumptable[pc]
 			end
 		end
 		pc += 1
@@ -103,27 +99,53 @@ function eval(code, jt)
 
 end
 
-function eval2() 
-	# Second version of eval
-	# Instead of using a bunch of elseifs, use dicts
+function eval2(code, jumptable) 
+	# Second version of eval, using Dict with anonymous functions
 
-	
-	#switch = Dict("+" => (tape, tapepos) -> (tape[tapepos] += 1), )
+	tape::Array{UInt8} = [0] 
+	# Ascii should be UInt7, so manual overflow is added in + and - cases
+	tapepos::Int = 1
+	pc::Int = 1 # "Program Counter" (code position)
 
+	switch = Dict(
+		'+' => () -> (tape[tapepos] += 1), 
+		'-' => () -> (if tape[tapepos] > 0; tape[tapepos] -= 1; else; tape[tapepos] = 127; end), # Test alt
+		'>' => () -> (if tapepos == length(tape); push!(tape, 0); end; tapepos += 1), 
+		'<' => () -> (if tapepos == 0; pushfirst!(tape, 0); else; tapepos -= 1; end),
+		'[' => () -> (if tape[tapepos] == 0
+						pc = jumptable[pc]
+					end), 
+		']' => () -> (if tape[tapepos] != 0
+						pc = jumptable[pc]
+					end),
+		',' => () -> (if eof(stdin)
+						return 1
+					else
+						tape[tapepos] = read(stdin, UInt8)
+					end), 
+		'.' => () -> (print(Char(tape[tapepos]))),
+		)
+
+	while pc <= length(code)
+		get(switch, code[pc],()->())()
+		pc+=1
+	end
 end
 
-function main()
-	#print(ARGS)
+function main() 
 	code = []
 	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.+++++++++++++++++++++++++++++.+++++++..+++.---.
-	println("File " * ARGS[1] * " loaded.")
-	io = open("Programs/"*ARGS[1]*".txt", "r")
-	code_plain = read(io, String)
-	code = readfile(code_plain)
-	jt = init_jumptable(code)
-	eval(code, jt)
-	println()
-
+	if length(ARGS) == 0
+		println("Must specify a file to load.")
+	else
+		println("File " * ARGS[1] * " loaded.")
+		io = open("Programs/"*ARGS[1]*".txt", "r")
+		code_plain = read(io, String)
+		code = readfile(code_plain)
+		jt = init_jumptable(code)
+		eval(code, jt)
+		println()
+	end
 end
 
 main()
