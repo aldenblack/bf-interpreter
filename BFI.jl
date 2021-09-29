@@ -138,7 +138,7 @@ function main()
 	if length(ARGS) == 0
 		println("Must specify a file to load.")
 	else
-		println("File " * ARGS[1] * " loaded.")
+		println("Loading " * ARGS[1] * ".")
 		io = open("Programs/"*ARGS[1]*".txt", "r")
 		code_plain = read(io, String)
 		code = readfile(code_plain)
