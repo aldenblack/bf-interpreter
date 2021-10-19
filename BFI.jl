@@ -17,7 +17,7 @@ after the matching [ command.
 """
 
 # ----- Read File -----
-global instructions = ['>', '<', '+', '-', ',', '.', '[', ']']
+const instructions = ['>', '<', '+', '-', ',', '.', '[', ']']
 function readfile(text::String)
 	code = []
 	for t in text
@@ -138,8 +138,7 @@ function main()
 	if length(ARGS) == 0
 		println("Must specify a file to load.")
 	else
-		println("Loading " * ARGS[1] * ".")
-		io = open("Programs/"*ARGS[1]*".txt", "r")
+		io = open(ARGS[1], "r")
 		code_plain = read(io, String)
 		code = readfile(code_plain)
 		jt = init_jumptable(code)
